@@ -1,11 +1,11 @@
-ARG ROS_DISTRO=iron
+ARG ROS_DISTRO=humble
 FROM ros:$ROS_DISTRO-ros-base as ci
 
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /root/ws_ros
 
 # Update to be your project's name
-ENV PROJECT_NAME=ros2-template
+ENV PROJECT_NAME=ROB599_HW2
 
 COPY . src/$PROJECT_NAME
 
