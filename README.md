@@ -34,5 +34,5 @@ you see fit for your project!
 ## Getting help
 
 If you have questions regarding usage of this project or would like to
-contribute, please ask a question on our [Discussions](https://github.com/Robotic-Decision-Making-Lab/ros2-template/discussions)
+contribute, please ask a question on our [Discussions](https://github.com/coamitch/ROB599_HW2/discussions)
 board!
