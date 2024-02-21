@@ -1,4 +1,4 @@
-FROM ghcr.io/coamitch/ROB599_HW2:humble-desktop-nvidia
+FROM ghcr.io/coamitch/rob599_hw2:humble-desktop-nvidia
 
 # Install ROS dependencies
 # This is done in a previous stage, but we include it again here in case anyone wants to

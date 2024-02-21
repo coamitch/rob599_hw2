@@ -2,8 +2,8 @@
   "name": "ROS 2 NVIDIA Dev Container",
   "dockerFile": "Dockerfile",
   "context": "../..",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/home/ros/ws_ros/src/ROB599_HW2,type=bind",
-  "workspaceFolder": "/home/ros/ws_ros/src/ROB599_HW2",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/ros/ws_ros/src/rob599_hw2,type=bind",
+  "workspaceFolder": "/home/ros/ws_ros/src/rob599_hw2",
   "remoteUser": "ros",
   "runArgs": [
     "--network=host",
