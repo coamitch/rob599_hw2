@@ -13,13 +13,14 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='ros',
-    maintainer_email='coamitch@ucsc.edu',
-    description='TODO: Package description',
+    maintainer='Colin Mitchell',
+    maintainer_email='mitchcol@oregonstate.edu',
+    description='ROB 599 Homework 2',
     license='BSD-3-Clause',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'speed_limiter = rob599_hw2.SpeedLimiter:main'
         ],
     },
 )
