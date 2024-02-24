@@ -16,6 +16,7 @@ import rclpy
 from geometry_msgs.msg import Twist, Vector3
 from rclpy.node import Node
 from rclpy.parameter import Parameter
+from std_srvs.srv import SetBool
 
 
 # creating a class to manage the node function
@@ -33,7 +34,7 @@ class SpeedLimiterNode(Node):
         # self._veloConst = 10.0
 
         # defining our linear and rotational velocity constraints using parameters and
-        # setting a value for them (part 4) as well as the watch dog parameters
+        # setting a value for them (part 4) as well as the watch dog parameters (part 8)
         self.declare_parameters(
             namespace="",
             parameters=[
@@ -46,6 +47,12 @@ class SpeedLimiterNode(Node):
 
         # watch dog timer set to parameter time.
         self._wdTimer = self.create_timer(self.watchdogPeriodParam, self._wdCallback)
+
+        # defining a service to set the velocity to zero when true and false otherwise.
+        # this is functionality for part 9.
+        self._service = self.create_service(SetBool, "apply_breaks", self._serCallback)
+        self._applyBreaksFlag = False
+        self._abTimer = self.create_timer(0.1, self._abCallback)
 
     # getters/setters
     @property
@@ -118,15 +125,19 @@ class SpeedLimiterNode(Node):
         # on each incoming message, we need to check each of the components of the linear and rotational
         # velocities and adjust them for the outgoing message.
 
-        # building a new message with the adjusted values
-        newMsg = Twist()
-        newMsg.linear = self.adjustVelos(msg.linear, "lin")
-        newMsg.angular = self.adjustVelos(msg.angular, "ang")
+        # checking if we are in apply breaks mode. if not, then we adjust the message
+        # as normal.
+        if not self._applyBreaksFlag:
+            # building a new message with the adjusted values
+            newMsg = Twist()
+            newMsg.linear = self.adjustVelos(msg.linear, "lin")
+            newMsg.angular = self.adjustVelos(msg.angular, "ang")
 
-        # publishing the message
-        self._pub.publish(newMsg)
+            # publishing the message
+            self._pub.publish(newMsg)
 
-        # clearing our watchdog flag since we got a message
+        # either way, we recieved a speed_in message, so we clear our watchdog
+        # flag since we got a message
         self.withWatchdogParam = False
 
     def packTwistMsg(self, vals: list) -> Twist:
@@ -151,7 +162,8 @@ class SpeedLimiterNode(Node):
         # in this timer callback, we just need to check if the parameter bool is true or
         # not. this is based on how long its been since the last incoming message.
 
-        if self.withWatchdogParam:
+        # we only want to print a watch dog message if we also aren't
+        if self.withWatchdogParam and not self._applyBreaksFlag:
             # our bool is true so we send a zero velo Twist message and leave the flag as
             # is since its already true.
             msg = self.packTwistMsg([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
@@ -161,6 +173,27 @@ class SpeedLimiterNode(Node):
             # otherwise, our message was false (meaning we saw a message in the period time)
             # and we reset our flag
             self.withWatchdogParam = True
+
+    def _serCallback(self, request, response):
+        # callback used for the apply breaks service
+
+        # setting flags for publishing 0 at 10hz
+        try:
+            self._applyBreaksFlag = request.data
+            response.success = True
+            response.message = "Success"
+            return response
+
+        except TypeError:
+            response.success = False
+            response.message = "Failure"
+            return response
+
+    def _abCallback(self):
+        # callback to publish a zero velo message at 10hz if the service flag is set
+        if self._applyBreaksFlag:
+            msg = self.packTwistMsg([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            self._pub.publish(msg)
 
 
 def main(args=None):
