@@ -15,6 +15,7 @@ import copy
 import rclpy
 from geometry_msgs.msg import Twist, Vector3
 from rclpy.node import Node
+from rclpy.parameter import Parameter
 
 
 # creating a class to manage the node function
@@ -32,10 +33,19 @@ class SpeedLimiterNode(Node):
         # self._veloConst = 10.0
 
         # defining our linear and rotational velocity constraints using parameters and
-        # setting a value for them (part 4)
+        # setting a value for them (part 4) as well as the watch dog parameters
         self.declare_parameters(
-            namespace="", parameters=[("linear_max", 10.0), ("angular_max", 10.0)]
+            namespace="",
+            parameters=[
+                ("linear_max", 10.0),
+                ("angular_max", 10.0),
+                ("with_watchdog", True),
+                ("watchdog_period", 5),
+            ],
         )
+
+        # watch dog timer set to parameter time.
+        self._wdTimer = self.create_timer(self.watchdogPeriodParam, self._wdCallback)
 
     # getters/setters
     @property
@@ -47,6 +57,23 @@ class SpeedLimiterNode(Node):
     def angMaxParam(self):
         self._angMaxParam = self.get_parameter("angular_max")
         return self._angMaxParam.value
+
+    @property
+    def watchdogPeriodParam(self):
+        # this is a little long for an attribute name, but its just for the timer
+        self._watchdogPeriodParam = self.get_parameter("watchdog_period")
+        return self._watchdogPeriodParam.value
+
+    @property
+    def withWatchdogParam(self):
+        self._withWatchdogParam = self.get_parameter("with_watchdog")
+        return self._withWatchdogParam.value
+
+    @withWatchdogParam.setter
+    def withWatchdogParam(self, flag: bool):
+        param = Parameter("with_watchdog", rclpy.Parameter.Type.BOOL, flag)
+        paramList = [param]
+        self.set_parameters(paramList)
 
     # member methods
     def adjustVelos(self, velos: Vector3, type) -> Vector3:
@@ -98,6 +125,42 @@ class SpeedLimiterNode(Node):
 
         # publishing the message
         self._pub.publish(newMsg)
+
+        # clearing our watchdog flag since we got a message
+        self.withWatchdogParam = False
+
+    def packTwistMsg(self, vals: list) -> Twist:
+        # takes input values list and packs them into a Twist message to publish
+        linearVelos = Vector3()
+        linearVelos.x = float(vals[0])
+        linearVelos.y = float(vals[1])
+        linearVelos.z = float(vals[2])
+
+        angularVelos = Vector3()
+        angularVelos.x = float(vals[3])
+        angularVelos.y = float(vals[4])
+        angularVelos.z = float(vals[5])
+
+        msg = Twist()
+        msg.linear = linearVelos
+        msg.angular = angularVelos
+
+        return msg
+
+    def _wdCallback(self):
+        # in this timer callback, we just need to check if the parameter bool is true or
+        # not. this is based on how long its been since the last incoming message.
+
+        if self.withWatchdogParam:
+            # our bool is true so we send a zero velo Twist message and leave the flag as
+            # is since its already true.
+            msg = self.packTwistMsg([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            self._pub.publish(msg)
+
+        else:
+            # otherwise, our message was false (meaning we saw a message in the period time)
+            # and we reset our flag
+            self.withWatchdogParam = True
 
 
 def main(args=None):
