@@ -29,11 +29,12 @@ class NasaLaunchClientNode(Node):
         self._result = self._client.send_goal_async(
             goal, feedback_callback=self._cdFeedback
         )
+
         self._result.add_done_callback(self._jaCallback)
 
     def _cdFeedback(self, feedback):
         # logging the feedback we get from the action server (this is just the countdown)
-        self.get_logger().info("T-minus: %d".format())
+        self.get_logger().info(f"T-minus: {feedback.feedback.time_to_launch}")
 
     # fires when the job is accepted
     def _jaCallback(self, result):

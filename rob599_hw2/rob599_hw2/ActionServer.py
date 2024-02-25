@@ -26,21 +26,23 @@ class NasaLaunchServerNode(Node):
     def _asCallback(self, goal):
         # callback for the action server
 
-        # starting count
+        # getting the starting count
         startingCount = goal.request.starting_count
 
         # setting up the feedback msg and init
         feedbackMsg = Countdown.Feedback()
 
         # counting down (i.e. publishing our feedback)
-        for i in range(startingCount, 0):
+        for i in reversed(range(startingCount + 1)):
             feedbackMsg.time_to_launch = i
             goal.publish_feedback(feedbackMsg)
             time.sleep(1)
 
+        goal.succeed()
+
         # finished counting down, so we need to send a launched message
         result = Countdown.Result()
-        result.launch_status = "..., 2, 1, 0, all engines running ... LIFT OFF! We have liftoff! Tower cleared."
+        result.launched = "..., 2, 1, 0, all engines running... LIFT OFF! We have liftoff! Tower cleared."
 
         return result
 
