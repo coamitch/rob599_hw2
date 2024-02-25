@@ -22,6 +22,8 @@ setup(
             "speed_limiter = rob599_hw2.SpeedLimiter:main",
             "pub_helper = rob599_hw2.PubHelper:main",
             "msg_checker = rob599_hw2.MsgChecker:main",
+            "nasa = rob599_hw2.ActionServer:main",
+            "flight_control = rob599_hw2.ActionClient:main",
         ],
     },
 )

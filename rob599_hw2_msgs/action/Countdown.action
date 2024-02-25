@@ -1,0 +1,8 @@
+# goal
+int64 starting_count
+---
+# result
+string launched
+---
+# feedback
+int64 time_to_launch
