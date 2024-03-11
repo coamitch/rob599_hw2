@@ -70,6 +70,7 @@ RUN sudo apt-get -q update \
     && sudo apt-get -q -y upgrade \
     && rosdep update \
     && rosdep install -y --from-paths src --ignore-src -r --rosdistro ${ROS_DISTRO} \
+    && sudo apt-get install -y \
     ros-$ROS_DISTRO-cartographer \
     ros-$ROS_DISTRO-cartographer-ros \
     ros-$ROS_DISTRO-navigation2 \
