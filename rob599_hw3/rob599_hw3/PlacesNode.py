@@ -306,6 +306,10 @@ class MemorizeLocsService(Node):
             feedbackMsg.patrol_status += f'Patrol {(waypointsVisited / numWaypoints) * 100}% complete.'
             goal.publish_feedback(feedbackMsg)
 
+            # telling a joke for extra credit
+            feedbackMsg.patrol_status = 'What did the robot carry in its wallet? Cache.'
+            goal.publish_feedback(feedbackMsg)
+
         # once we have gone to each saved waypoint, we relay that we are finished
         goal.succeed()
         result = Patrol.Result()
