@@ -2,7 +2,7 @@ ARG ROS_DISTRO=humble
 FROM osrf/ros:$ROS_DISTRO-desktop-full
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PROJECT_NAME=rob599-hw3
+ENV PROJECT_NAME=rob599_hw2
 
 # Install apt packages
 RUN apt-get -q update \
@@ -54,7 +54,8 @@ RUN sudo apt-get -q update \
     ros-$ROS_DISTRO-turtlebot3-msgs \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \
-    && sudo rm -rf /var/lib/apt/lists/*
+    && sudo rm -rf /var/lib/apt/lists/*upport for password authentication was removed on August 13, 2021.
+
 
 COPY --chown=$USER_UID:$USER_GID . src/$PROJECT_NAME
 RUN vcs import src < src/$PROJECT_NAME/ros2.repos
