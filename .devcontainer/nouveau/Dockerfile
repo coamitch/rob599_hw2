@@ -15,6 +15,11 @@ RUN sudo apt-get -q update \
     && sudo apt-get -q -y upgrade \
     && rosdep update \
     && rosdep install -y --from-paths . --ignore-src -r --rosdistro ${ROS_DISTRO} \
+    && sudo apt-get install -y \
+    nano \
+    ros-$ROS_DISTRO-turtlebot3-cartographer \
+    ros-$ROS_DISTRO-turtlebot3-navigation2 \
+    ros-$ROS_DISTRO-rviz2 \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*

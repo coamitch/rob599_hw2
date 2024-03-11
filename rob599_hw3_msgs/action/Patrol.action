@@ -1,5 +1,5 @@
 # goal
-bool patrolFlag
+bool patrol_flag
 ---
 # result
 string obj_status

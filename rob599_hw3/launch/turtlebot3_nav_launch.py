@@ -20,7 +20,7 @@ def generate_launch_description():
 			]),
 			launch_arguments={
 				'use_sim_time': 'True',
-				'map': '$HOME/map.yaml'
+				'map': '/home/ros/ws_ros/src/rob599_hw2/rob599_hw3/resource/map.yaml'
 			}.items()
 		),
 
@@ -35,19 +35,6 @@ def generate_launch_description():
 			launch_arguments={
 				'x_pose': '-1.5',
 				'y_pose': '1.5'
-			}.items()
-		),
-
-		# Start up the SLAM system.
-		IncludeLaunchDescription(
-			PythonLaunchDescriptionSource([
-				os.path.join(
-					get_package_share_directory('turtlebot3_cartographer'),
-					'launch/cartographer.launch.py'
-				)
-			]),
-			launch_arguments={
-				'use_sim_time': 'True'
 			}.items()
 		)
 

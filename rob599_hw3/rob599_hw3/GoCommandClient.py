@@ -20,7 +20,7 @@ class GoCommandClient(Node):
 
         self._client = ActionClient(self, GoCommand, 'go_to')
 
-    def sendGoal(self, mem_key: string):
+    def sendGoal(self, mem_key):
         goal = GoCommand.Goal()
         goal.mem_key = mem_key
 
@@ -34,7 +34,7 @@ class GoCommandClient(Node):
 
     def _cdFeedback(self, feedback):
         # logging the feedback we get from the action server
-        self.get_logger().info(f"Eta: {feedback.feedback.time_remaining}")
+        self.get_logger().info(f"Eta: {feedback.feedback.time_remaining} s")
 
     # fires when the job is accepted
     def _jaCallback(self, result):
