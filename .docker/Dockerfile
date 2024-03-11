@@ -71,6 +71,7 @@ RUN sudo apt-get -q update \
     && rosdep update \
     && rosdep install -y --from-paths src --ignore-src -r --rosdistro ${ROS_DISTRO} \
     && sudo apt-get install -y \
+    ros-$ROS_DISTRO-gazebo-* \
     ros-$ROS_DISTRO-cartographer \
     ros-$ROS_DISTRO-cartographer-ros \
     ros-$ROS_DISTRO-navigation2 \
@@ -80,6 +81,10 @@ RUN sudo apt-get -q update \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*
+
+RUN echo "export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/ws_ros/src/turtlebot3_simulations/turtlebot3_gazebo/models" >> /home/$USERNAME/.bashrc \
+    && echo "export TURTLEBOT3_MODEL=burger" >> /home/$USERNAME/.bashrc \
+    && echo "source /usr/share/gazebo/setup.sh" >> /home/$USERNAME/.bashrc
 
 RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
     && colcon build \
@@ -98,15 +103,9 @@ COPY --chown=$USER_UID:$USER_GID . src/$PROJECT_NAME
 # This is just going to use the Turtlebot3 Gazebo simulation
 RUN sudo apt-get -q update \
     && sudo apt-get -q -y upgrade \
-    && sudo apt-get install -y \
-    ros-$ROS_DISTRO-gazebo-* \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*
-
-RUN echo "export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/ws_ros/src/turtlebot3_simulations/turtlebot3_gazebo/models" >> /home/$USERNAME/.bashrc \
-    && echo "export TURTLEBOT3_MODEL=burger" >> /home/$USERNAME/.bashrc \
-    && echo "source /usr/share/gazebo/setup.sh" >> /home/$USERNAME/.bashrc
 
 FROM desktop as desktop-nvidia
 
