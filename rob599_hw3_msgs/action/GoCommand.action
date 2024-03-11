@@ -1,0 +1,8 @@
+# goal
+string mem_key
+---
+# result
+string obj_status
+---
+# feedback
+float32 time_remaining

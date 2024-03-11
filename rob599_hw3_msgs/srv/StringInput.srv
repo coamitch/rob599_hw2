@@ -1,0 +1,6 @@
+# inputs
+string data
+---
+# outputs
+string errors
+bool success

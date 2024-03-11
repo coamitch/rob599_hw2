@@ -1,0 +1,8 @@
+# goal
+bool patrolFlag
+---
+# result
+string obj_status
+---
+# feedback
+string patrol_status

@@ -1,13 +1,8 @@
 ARG ROS_DISTRO=humble
-FROM ros:$ROS_DISTRO-ros-base as ci
+FROM osrf/ros:$ROS_DISTRO-desktop-full
 
 ENV DEBIAN_FRONTEND=noninteractive
-WORKDIR /root/ws_ros
-
-# Update to be your project's name
-ENV PROJECT_NAME=rob599_hw2
-
-COPY . src/$PROJECT_NAME
+ENV PROJECT_NAME=rob599-hw3
 
 # Install apt packages
 RUN apt-get -q update \
@@ -27,18 +22,6 @@ RUN apt-get -q update \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
-# Install all ROS dependencies needed for CI
-RUN apt-get -q update \
-    && apt-get -q -y upgrade \
-    && rosdep update \
-    && rosdep install -y --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} --as-root=apt:false \
-    && rm -rf src \
-    && apt-get autoremove -y \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/*
-
-FROM ci as robot
-
 # Configure a new non-root user
 ARG USERNAME=ros
 ARG USER_UID=1000
@@ -55,65 +38,36 @@ RUN groupadd --gid $USER_GID $USERNAME \
 USER $USERNAME
 ENV USER=$USERNAME
 
-ENV DEBIAN_FRONTEND=noninteractive
 ENV USER_WORKSPACE=/home/$USERNAME/ws_ros
 WORKDIR $USER_WORKSPACE
 
-COPY --chown=$USER_UID:$USER_GID . src/$PROJECT_NAME
-
-# Uncomment to download and install external repos used by the project
-# RUN vcs import src < src/$PROJECT_NAME/ros2.repos
-
-# Install all ROS dependencies
-WORKDIR $USER_WORKSPACE
+# This is just going to use the Turtlebot3 Gazebo simulation
 RUN sudo apt-get -q update \
     && sudo apt-get -q -y upgrade \
-    && rosdep update \
-    && rosdep install -y --from-paths src --ignore-src -r --rosdistro ${ROS_DISTRO} \
+    && sudo apt-get install -y \
+    ros-$ROS_DISTRO-gazebo-* \
+    ros-$ROS_DISTRO-cartographer \
+    ros-$ROS_DISTRO-cartographer-ros \
+    ros-$ROS_DISTRO-navigation2 \
+    ros-$ROS_DISTRO-nav2-bringup \
+    ros-$ROS_DISTRO-dynamixel-sdk \
+    ros-$ROS_DISTRO-turtlebot3-msgs \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*
 
+COPY --chown=$USER_UID:$USER_GID . src/$PROJECT_NAME
+RUN vcs import src < src/$PROJECT_NAME/ros2.repos
+
+RUN echo "export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/ws_ros/src/turtlebot3_simulations/turtlebot3_gazebo/models" >> /home/$USERNAME/.bashrc \
+    && echo "export TURTLEBOT3_MODEL=burger" >> /home/$USERNAME/.bashrc \
+    && echo "source /usr/share/gazebo/setup.sh" >> /home/$USERNAME/.bashrc
+
 RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
-    && colcon build \
+    && colcon build --symlink-install \
     && sudo sed -i "s#/opt/ros/\$ROS_DISTRO/setup.bash#$USER_WORKSPACE/setup.sh#g" /ros_entrypoint.sh \
     && echo "source ${USER_WORKSPACE}/install/setup.bash" >> /home/$USERNAME/.bashrc \
     && echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> /home/$USERNAME/.bashrc
-
-FROM robot as desktop
-
-ENV DEBIAN_FRONTEND=noninteractive
-ENV USER_WORKSPACE=/home/$USERNAME/ws_ros
-WORKDIR $USER_WORKSPACE
-
-# Install tools needed for Gazebo installation
-RUN sudo apt-get -q update \
-    && sudo apt-get -q -y upgrade \
-    && sudo apt-get install -y \
-    lsb-release \
-    wget \
-    gnupg \
-    && sudo apt-get autoremove -y \
-    && sudo apt-get clean -y \
-    && sudo rm -rf /var/lib/apt/lists/*
-
-# Set to the desired version of Gazebo
-# Refer to the official documentation for the recommended pairings:
-# https://gazebosim.org/docs/harmonic/ros_installation
-ENV GAZEBO_VERSION=harmonic
-
-RUN sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null \
-    && sudo apt-get -q update \
-    && sudo apt-get -q -y upgrade \
-    && sudo apt-get install -y \
-    gz-$GAZEBO_VERSION \
-    ros-$ROS_DISTRO-ros-gz$GAZEBO_VERSION \
-    && sudo apt-get autoremove -y \
-    && sudo apt-get clean -y \
-    && sudo rm -rf /var/lib/apt/lists/*
-
-FROM desktop as desktop-nvidia
 
 # Install NVIDIA software
 RUN sudo apt-get update \
@@ -133,3 +87,12 @@ RUN sudo apt-get update \
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
 ENV QT_X11_NO_MITSHM 1
+
+# Install debugging/linting Python packages
+COPY --chown=$USER_UID:$USER_GID requirements-dev.txt .
+RUN python3 -m pip install -r requirements-dev.txt \
+    && rm -rf requirements-dev.txt
+
+# Disable the setuputils installation warning
+# This prevents us from needing to pin the setuputils version (which doesn't always work)
+ENV PYTHONWARNINGS="ignore"
